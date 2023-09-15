@@ -9,9 +9,29 @@ GitLog Insights for QA is a lightweight tool designed to provide QA teams with a
 
 This project provides some utility functions that can generate insights from the data. These insights can help understand the patterns and trends in the GitHub repositories data and how they can help the testing team. Some of the insights are:
 
-### Most modified files
+### Top Touched files
+
+Find the top files that have been modified the most in a given time period.
+
+Possible inferences:
+Focus testing efforts on files that have undergone frequent changes and are complex.
+
+Encourages testers to focus on complex files and consider collaborating with the primary authors for in-depth testing, highlighting the importance of prioritizing testing efforts effectively.
+
+Resource allocation - Allocate more resources for files that underwent considerable modifications
+Ownership and expertise - Identify developers who are authors of important files
+Complexity and testing focus - Assess the complexity of files and align testing efforts accordingly
+Collaboration with developers - Know which authors to collaborate with for which modules
+
 
 ### PR Review time
+
+### Merge Activity
+
+### Author Bias
+
+### Size of PRs
+
 
 ## Installation
 To install gitlog-insights, you need to have Python 3.10 or higher and pip installed on your system. You also need to install PyDriller and its dependencies. 
@@ -35,15 +55,10 @@ export TOKEN=
 
 2. The scripts that generate insights are present in the insights folder. You can run any of the insights by using the corresponding script and providing the required arguments.
    ```
-   python insights/get_most_touched_files.py qxf2/newsletter_automation 2023-01-01 2023-01-31
+   python insights/get_most_touched_files.py
    ```
-   You can find more details by using the --help option for each script.
+   You can find more details in the respective script.
    
-3. Alternatively, run the main script to generate all the insights:
-   ```
-   python main.py
-
-5. View the generated insights in the console.
 
 ## Examples
 
