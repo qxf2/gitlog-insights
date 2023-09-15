@@ -1,9 +1,9 @@
 # GitLog Insights for QA
-A simple framework that provides insights derived from Git logs which can benefit testing teams. It analyzes Git repositories and generates insights that can enhance testing strategies and efficiency.
+A simple framework that provides insights derived from Git logs which can benefit testing teams. 
 
 ## Introduction
 
-GitLog Insights for QA is a lightweight tool designed to provide QA teams with actionable insights extracted from Git commit history. By analyzing such data, testing teams can make informed decisions, improve testing approaches, and streamline their testing processes. The framework provides utility functions to extract and visualize data from Git logs, such as contributors, files, commits, pull requests, etc. To extract the data, it uses PyDriller, a Python framework for mining software repositories, and GitHub API.
+GitLog Insights is designed to provide QA teams with actionable insights extracted from Git commit history. By analyzing such data, testing teams can make informed decisions, improve testing approaches, and streamline their testing processes. The framework provides utility functions to extract and visualize data from Git logs, such as contributors, files, commits, pull requests, etc. To extract the data, it uses [PyDriller](https://github.com/ishepard/pydriller), a Python framework for mining software repositories, and [GitHub API](https://docs.github.com/en/rest/guides/getting-started-with-the-rest-api?apiVersion=2022-11-28).
 
 ## Insights
 
@@ -54,7 +54,7 @@ python insights/get_most_touched_files.py
 ```
 You can find more details in the respective script.
 
-For some of the insights, a personal access token is needed(to access the GitHub API data). For information on how to create a personal access token, see "Creating a personal access token". Once created, export using: 
+For some of the insights, a personal access token is needed(to access the GitHub API data). For information on how to create a personal access token, see [Creating a personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token). Once created, export using: 
 ```
 export TOKEN=
 ```
