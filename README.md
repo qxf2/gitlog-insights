@@ -46,7 +46,7 @@ To install gitlog-insights, you need to have Python 3.10 or higher and pip insta
    pip install -r requirements.txt
 
 ## Usage
-To use gitlog-qa-insights, you need to provide the path to the Git repository that you want to analyze, and optionally the start and end dates for the analysis. you need. 
+To use gitlog-qa-insights, you need to provide the path to the Git repository that you want to analyze, and optionally the start and end dates for the analysis. 
 
 The scripts that generate insights are present in the insights folder. You can run any of the insights by using the corresponding script and providing the required arguments.
 ```
