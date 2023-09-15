@@ -28,7 +28,10 @@ To install gitlog-insights, you need to have Python 3.10 or higher and pip insta
 ## Usage
 To use gitlog-qa-insights, you need to provide the path to the Git repository that you want to analyze, and optionally the start and end dates for the analysis. You can use any of the utility functions provided in the helpers folder to get the data and insights that you need. 
 
-1. To access the GitHub API, you would need a personal access token. For information on how to create a personal access token, see "Creating a personal access token". Place the token in the config.ini file.
+1. To access the GitHub API, you would need a personal access token. For information on how to create a personal access token, see "Creating a personal access token". Once created, export using: 
+```
+export TOKEN=
+```
 
 2. The scripts that generate insights are present in the insights folder. You can run any of the insights by using the corresponding script and providing the required arguments.
    ```
