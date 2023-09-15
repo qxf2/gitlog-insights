@@ -39,7 +39,7 @@ To install gitlog-insights, you need to have Python 3.10 or higher and pip insta
 1. Clone this repository:
    ```sh
    git clone https://github.com/qxf2/gitlog-insights.git
-   cd gitlog-insights-for-qa
+   cd gitlog-insights
 
 2. Install the required dependencies:
    ```sh
