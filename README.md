@@ -9,7 +9,7 @@ GitLog Insights for QA is a lightweight tool designed to provide QA teams with a
 
 This project provides some utility functions that can generate insights from the data. These insights can help understand the patterns and trends in the GitHub repositories data and how they can help the testing team. Some of the insights are:
 
-### Top Touched files
+#### Top Touched files
 
 Find the top files that have been modified the most in a given time period.
 
@@ -24,13 +24,13 @@ Complexity and testing focus - Assess the complexity of files and align testing 
 Collaboration with developers - Know which authors to collaborate with for which modules
 
 
-### PR Review time
+#### PR Review time
 
-### Merge Activity
+#### Merge Activity
 
-### Author Bias
+#### Author Bias
 
-### Size of PRs
+#### Size of PRs
 
 
 ## Installation
