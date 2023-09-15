@@ -46,19 +46,18 @@ To install gitlog-insights, you need to have Python 3.10 or higher and pip insta
    pip install -r requirements.txt
 
 ## Usage
-To use gitlog-qa-insights, you need to provide the path to the Git repository that you want to analyze, and optionally the start and end dates for the analysis. You can use any of the utility functions provided in the helpers folder to get the data and insights that you need. 
+To use gitlog-qa-insights, you need to provide the path to the Git repository that you want to analyze, and optionally the start and end dates for the analysis. you need. 
 
-1. To access the GitHub API, you would need a personal access token. For information on how to create a personal access token, see "Creating a personal access token". Once created, export using: 
+The scripts that generate insights are present in the insights folder. You can run any of the insights by using the corresponding script and providing the required arguments.
+```
+python insights/get_most_touched_files.py
+```
+You can find more details in the respective script.
+
+For some of the insights, a personal access token is needed(to access the GitHub API data). For information on how to create a personal access token, see "Creating a personal access token". Once created, export using: 
 ```
 export TOKEN=
 ```
-
-2. The scripts that generate insights are present in the insights folder. You can run any of the insights by using the corresponding script and providing the required arguments.
-   ```
-   python insights/get_most_touched_files.py
-   ```
-   You can find more details in the respective script.
-   
 
 ## Examples
 
