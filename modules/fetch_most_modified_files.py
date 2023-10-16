@@ -3,6 +3,8 @@ This script fetches the most modified files in a GitHub repository based on
 start_date, end_date, repo, branch, file_type
 
 """
+import sys
+import git
 from typing import Optional
 import heapq
 from collections import defaultdict
@@ -72,6 +74,20 @@ def find_top_files(
 
         file_info_df = pd.DataFrame(data)
         return file_info_df
-
-    except Exception as error:
-        raise error
+    except git.exc.NoSuchPathError as error:
+        print(f"\nCaught NoSuchPathError: {error}\n")
+        sys.exit(1)
+    except git.exc.GitCommandError as error:
+        if error.status == 128:
+            print("\nError : Default branch is not main for this repo!(Try master)\n")
+            print(f"Error message: {error}")
+            sys.exit(1)
+        else:
+            print(f"\nCaught a different GitCommandError : {error}\n")
+            sys.exit(1)
+    except OSError as error:
+        print(f"\nCaught an OSError: {error}\n")
+        sys.exit(1)
+    except Exception as general_error:
+        print(f"\nError occurred: {general_error}\n")
+        sys.exit(1)

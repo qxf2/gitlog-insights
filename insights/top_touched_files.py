@@ -59,8 +59,12 @@ def get_inputs():
             print("End date must be greater than start date. Please try again.")
         except ValueError:
             print("Invalid date format. Please try again.")
-
-    repo_path_input = input("Enter the repository path: ")
+    while True:
+        repo_path_input = input("Enter the repository path: ")
+        if repo_path_input:
+            break
+        else:
+            print("\nRepo path cannot be empty! Please enter valid repo path(example:https://github.com/qxf2/qxf2-page-object-model)\n")
 
     branch_input = input("Enter the branch name (default: main): ") or "main"
 
