@@ -1,5 +1,5 @@
 # GitLog Insights for QA
-A simple framework that provides insights derived from Git logs which can benefit testing teams. 
+A simple framework that provides insights derived from Git logs which can benefit testing teams.
 
 ## Introduction
 
@@ -18,9 +18,14 @@ Focus testing efforts on files that have undergone frequent changes and are comp
 
 Encourages testers to focus on complex files and consider collaborating with the primary authors for in-depth testing, highlighting the importance of prioritizing testing efforts effectively.
 
+Helps plan regression testing, focusing on the modules that depend on the most touched files/modules
+
 Resource allocation - Allocate more resources for files that underwent considerable modifications
+
 Ownership and expertise - Identify developers who are authors of important files
+
 Complexity and testing focus - Assess the complexity of files and align testing efforts accordingly
+
 Collaboration with developers - Know which authors to collaborate with for which modules
 
 
@@ -34,7 +39,7 @@ Collaboration with developers - Know which authors to collaborate with for which
 
 
 ## Installation
-To install gitlog-insights, you need to have Python 3.10 or higher and pip installed on your system. You also need to install PyDriller and its dependencies. 
+To install gitlog-insights, you need to have Python 3.10 or higher and pip installed on your system. You also need to install PyDriller and its dependencies.
 
 1. Clone this repository:
    ```sh
@@ -46,7 +51,7 @@ To install gitlog-insights, you need to have Python 3.10 or higher and pip insta
    pip install -r requirements.txt
 
 ## Usage
-To use gitlog-qa-insights, you need to provide the path to the Git repository that you want to analyze, and optionally the start and end dates for the analysis. 
+To use gitlog-qa-insights, you need to provide the path to the Git repository that you want to analyze, and optionally the start and end dates for the analysis.
 
 The scripts that generate insights are present in the insights folder. You can run any of the insights by using the corresponding script and providing the required arguments.
 ```
@@ -54,7 +59,7 @@ python insights/get_most_touched_files.py
 ```
 You can find more details in the respective script.
 
-For some of the insights, a personal access token is needed(to access the GitHub API data). For information on how to create a personal access token, see [Creating a personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token). Once created, export using: 
+For some of the insights, a personal access token is needed(to access the GitHub API data). For information on how to create a personal access token, see [Creating a personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token). Once created, export using:
 ```
 export TOKEN=
 ```
