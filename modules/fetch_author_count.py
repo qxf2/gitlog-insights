@@ -32,6 +32,7 @@ def get_contributors_info(repo_path, start_date, end_date):
         contributors_dict = {}
         for file, authors in authors_dict.items():
             contributors_dict[file] = {
+                'File Name': file,
                 'Authors': ', '.join(authors),
                 'Major': len(authors)
             }
