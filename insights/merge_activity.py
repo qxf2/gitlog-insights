@@ -5,7 +5,7 @@ import sys
 from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from helpers.github_pr_data_extractor import PRDataExtractor
-
+from modules.fetch_report_merge_activity import fetch_report
 
 def get_inputs():
     """
@@ -73,6 +73,10 @@ if __name__ == "__main__":
     start_date = start_date.strftime('%Y-%m-%d')
     end_date = end_date.strftime('%Y-%m-%d')
 
-    merge_details= github_api.get_merged_pr_details(start_date,end_date)
-    print(merge_details)
+    merge_details= github_api.get_merged_pr_details(start_date,end_date)    
     write_html_report(merge_details, "merge_report.html")
+    weekly_report=fetch_report(merge_details)
+    write_html_report(weekly_report, "weekly_merge_report.html")
+
+
+
