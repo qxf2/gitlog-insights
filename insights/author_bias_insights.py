@@ -85,4 +85,18 @@ if __name__ == "__main__":
     contributors_data = fetch_author_count.get_contributors_info(
         repo_path, start_date, end_date
     )
+
+    # Find the maximum major value
+    max_major = contributors_data['Major'].max()
+
+    # Find all rows with the maximum major value
+    highest_major_rows = contributors_data[contributors_data['Major'] == max_major]
+
+
+    # Print information for all rows with the highest major value
+    print("Files with the Highest Major:", len(highest_major_rows))
+    for index, row in highest_major_rows.iterrows():
+        
+        print(f"File {row['File Name']} biased by {row['Major']} author")
+
     write_html_report(contributors_data, "report.html")
