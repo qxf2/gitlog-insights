@@ -35,6 +35,7 @@ def find_top_files(
     file_info = defaultdict(
         lambda: {"authors": set(), "messages": [], "dates": [], "complexity": None}
     )
+    insights = []
     try:
         commit_list = Repository(
             repo_path, since=start_date, to=end_date, only_in_branch=branch
@@ -50,7 +51,7 @@ def find_top_files(
                         file_info[file_name]["dates"].append(date_str)
                     file_info[file_name]["messages"].append(commit.msg)
                     file_info[file_name]["complexity"] = (
-                        file.complexity if not pd.isna(file.complexity) else "NA"
+                        file.complexity if not pd.isna(file.complexity) else -1
                     )
                     file_count[file_name] += 1
 
@@ -71,7 +72,17 @@ def find_top_files(
             data.append(file_dict)
 
         file_info_df = pd.DataFrame(data)
-        return file_info_df
+
+        # Find the file with the highest complexity among the top modified files
+        max_complexity_file = file_info_df.loc[file_info_df['Complexity'].idxmax()]['File']
+        max_complexity_value = file_info_df['Complexity'].max()
+
+        print("")
+
+        complexity_summary = f"The file {max_complexity_file} is one of the top modified files within the given time period having a high complexity of {max_complexity_value}."
+
+
+        return file_info_df, complexity_summary
 
     except Exception as error:
         raise error
