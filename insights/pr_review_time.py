@@ -36,8 +36,6 @@ def calculate_review_time(repo_name, start_date, end_date):
     github_api = PRDataExtractor(repo_name)
     pr_details = github_api.get_pr_details(start_date, end_date)
 
-    print(pr_details)
-
     pr_details['created_at'] = pd.to_datetime(pr_details['created_at'],errors='coerce')
     pr_details['closed_at'] = pd.to_datetime(pr_details['closed_at'],errors='coerce')
 
