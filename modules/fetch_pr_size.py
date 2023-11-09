@@ -7,6 +7,15 @@ import pandas as pd
 import re
 from pydriller import Repository
 
+def inference_pr_size(insertions, deletions):
+    total_changes = insertions + deletions
+    if total_changes < 100:
+        return "small"
+    elif total_changes < 500:
+        return "medium"
+    else:
+        return "large"
+
 def find_pr_size(
     repo_path: str,
     start_date: str,
@@ -33,11 +42,18 @@ def find_pr_size(
                 if pr_number is not None:
                     pr_insertions = commit.insertions
                     pr_deletions = commit.deletions
-                    pr_size = pr_insertions + pr_deletions
+                    pr_size = inference_pr_size(pr_insertions,pr_deletions)
+                    totalsize = pr_insertions + pr_deletions
 
                 size_of_the_pr[pr_number] = {'PR Number':pr_number,'Insertions': pr_insertions, 'Deletions': pr_deletions,'Size of PR': pr_size}
+                # Provide insights based on PR size
+                if pr_size == "small":
+                    print(f'Insight: This is a small PR ({totalsize}) with minimal changes.')
+                elif pr_size == "medium":
+                    print(f'Insight: This PR ({totalsize}) has a moderate number of changes.')
+                else:
+                    print(f'Insight: This is a large PR ({totalsize}) with significant changes.')
 
-                  
         # Create a DataFrame from the data
         df = pd.DataFrame(size_of_the_pr).T
         return df

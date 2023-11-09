@@ -84,7 +84,7 @@ def write_html_report(file_info_df, file_name):
 
 if __name__ == "__main__":
     start_date, end_date, repo_path = get_inputs()
-    top_files_df = fetch_pr_size.find_pr_size(
+    top_files_df= fetch_pr_size.find_pr_size(
         repo_path, start_date, end_date
     )
     write_html_report(top_files_df, "report.html")
