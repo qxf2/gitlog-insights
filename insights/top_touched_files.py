@@ -115,3 +115,4 @@ if __name__ == "__main__":
     )
     print(insights)
     write_html_report(top_files_df, "report.html")
+    print('\nDetailed log analysis can be found in report.html\n')
