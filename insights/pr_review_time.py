@@ -23,33 +23,9 @@ The average time take for PR review for the specified time period.
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from helpers.github_pr_data_extractor import PRDataExtractor
+from modules.pr_review_time import calculate_review_time
 import pandas as pd
 from datetime import datetime
-
-def calculate_review_time(repo_name, start_date, end_date):
-    """
-    Gets the PR review details and calculates the total review time for each PR.
-    It also computes the average review time for the given time period
-    """
-
-    github_api = PRDataExtractor(repo_name)
-    pr_details = github_api.get_pr_details(start_date, end_date)
-
-    pr_details['created_at'] = pd.to_datetime(pr_details['created_at'],errors='coerce')
-    pr_details['closed_at'] = pd.to_datetime(pr_details['closed_at'],errors='coerce')
-
-    pr_details['review_time'] = pr_details['closed_at'] - pr_details['created_at']
-
-    print(pr_details)
-
-    # Calculate the average review time
-    average_review_time = pr_details['review_time'].mean()
-
-    # Print the result
-    print("Average Review Time: ", average_review_time)
-
-    return pr_details, average_review_time
 
 def get_inputs():
     """
@@ -85,7 +61,25 @@ def get_inputs():
 
     return start_date_input, end_date_input, repo_name
 
-def write_html_report(file_info_df, review_time, file_name):
+def draw_inference(review_details):
+    # Calculate the average review time
+    average_review_time = review_details['review_time'].mean()
+
+    # Identify PRs with review times longer than the average
+    long_review_prs = review_details[review_details['review_time'] > average_review_time]
+
+    # Display average review time
+    print(f"Average Review Time: {average_review_time}")
+
+    # Display information about PRs with long review times
+    if not long_review_prs.empty:
+        print("PRs with longer than average review time:")
+        for index, row in long_review_prs.iterrows():
+            print(f"PR #{row['pr_number']}: {row['pr_title']} - Review Time: {row['review_time']}")
+         
+    return average_review_time,long_review_prs 
+     
+def write_html_report(file_info_df, review_time, long_review_prs ,file_name):
     """
     Writes the DataFrame and average review time to an HTML report file.
 
@@ -111,5 +105,6 @@ def write_html_report(file_info_df, review_time, file_name):
 
 if __name__ == "__main__":
     start_date, end_date, repo_name = get_inputs()
-    review_details, review_time = calculate_review_time(repo_name,start_date,end_date)
-    write_html_report(review_details,review_time, "report.html")
+    review_details = calculate_review_time(repo_name,start_date,end_date)
+    average_review_time,long_review_prs = draw_inference(review_details)
+    write_html_report(review_details,average_review_time,long_review_prs,"pr_review_time_report.html")
