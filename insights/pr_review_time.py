@@ -61,7 +61,7 @@ def get_inputs():
 
     return start_date_input, end_date_input, repo_name
 
-def draw_inference(review_details):
+def compute_inference(review_details):
     # Calculate the average review time
     average_review_time = review_details['review_time'].mean()
 
@@ -76,8 +76,16 @@ def draw_inference(review_details):
         print("PRs with longer than average review time:")
         for index, row in long_review_prs.iterrows():
             print(f"PR #{row['pr_number']}: {row['pr_title']} - Review Time: {row['review_time']}")
-         
-    return average_review_time,long_review_prs 
+       
+    # Find the author with the most reviews
+    most_reviews_author = review_details['author'].value_counts().idxmax()
+    print(f"Author with the most PR's': {most_reviews_author}")
+
+    # Find the author with the most average review time
+    avg_time_by_author = review_details.groupby('author')['review_time'].mean()
+    most_avg_time_author = avg_time_by_author.idxmax()
+    print(f"Author with the highest average review time: {most_avg_time_author}")
+    return average_review_time, long_review_prs 
      
 def write_html_report(file_info_df, review_time, long_review_prs ,file_name):
     """
@@ -106,5 +114,5 @@ def write_html_report(file_info_df, review_time, long_review_prs ,file_name):
 if __name__ == "__main__":
     start_date, end_date, repo_name = get_inputs()
     review_details = calculate_review_time(repo_name,start_date,end_date)
-    average_review_time,long_review_prs = draw_inference(review_details)
+    average_review_time,long_review_prs = compute_inference(review_details)
     write_html_report(review_details,average_review_time,long_review_prs,"pr_review_time_report.html")
