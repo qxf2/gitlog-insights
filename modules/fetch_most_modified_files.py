@@ -114,7 +114,9 @@ def get_insights(
     max_commits_authors_summary = f"Author(s) who made these {max_changes_count} commits are: {max_commits_authors}"
 
     # Framing inferences
-    insights = f"\nInsights for the duration {start_date} to {end_date}:\n\n" + "  ->"
-    insights = insights + complexity_summary +  "\n  ->" + max_commits_summary +  "\n  ->" + max_commits_authors_summary
+    start_date_str = start_date.strftime('%Y-%m-%d')
+    end_date_str = end_date.strftime('%Y-%m-%d')
+    insights = f"\nInsights for the duration {start_date_str} to {end_date_str}:\n\n" + "  -> "
+    insights = insights + complexity_summary +  "\n  -> " + max_commits_summary +  "\n  -> " + max_commits_authors_summary
 
     return insights

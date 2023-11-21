@@ -114,5 +114,5 @@ if __name__ == "__main__":
         repo_path, start_date, end_date, file_type, branch
     )
     print(insights)
-    write_html_report(top_files_df, "report.html")
-    print('\nDetailed log analysis can be found in report.html\n')
+    write_html_report(top_files_df, "top_touched_files_report.html")
+    print('\nDetailed log analysis can be found in top_touched_files_report.html\n')
