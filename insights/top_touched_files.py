@@ -26,6 +26,7 @@ The top files in the repository based on the number of modifications.
 import os
 import sys
 from datetime import datetime
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from modules import fetch_most_modified_files
 
@@ -75,7 +76,13 @@ def get_inputs():
     else:
         file_type_input = file_type_input.lower()
 
-    return start_date_input, end_date_input, repo_path_input, branch_input, file_type_input
+    return (
+        start_date_input,
+        end_date_input,
+        repo_path_input,
+        branch_input,
+        file_type_input,
+    )
 
 
 def write_html_report(file_info_df, file_name):
@@ -90,7 +97,7 @@ def write_html_report(file_info_df, file_name):
         None
     """
     try:
-        with open(file_name, "w", encoding='utf-8') as file:
+        with open(file_name, "w", encoding="utf-8") as file:
             if file_info_df.empty:
                 message = "No data available between the specified dates."
                 file.write(message)
@@ -101,10 +108,11 @@ def write_html_report(file_info_df, file_name):
         print(f"An error occurred while writing the HTML report: {str(error)}")
 
 
-
 if __name__ == "__main__":
     start_date, end_date, repo_path, branch, file_type = get_inputs()
-    top_files_df = fetch_most_modified_files.find_top_files(
+    top_files_df, insights = fetch_most_modified_files.find_top_files(
         repo_path, start_date, end_date, file_type, branch
     )
-    write_html_report(top_files_df, "report.html")
+    print(insights)
+    write_html_report(top_files_df, "top_touched_files_report.html")
+    print('\nDetailed log analysis can be found in top_touched_files_report.html\n')

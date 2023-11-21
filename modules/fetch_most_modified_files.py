@@ -28,13 +28,14 @@ def find_top_files(
         file_type (str, optional): The file type to filter. Defaults to None.
 
     Returns:
-        dataframe: A dataframe containing the file info.
+        DataFrame: A dataframe containing the file info.
     """
 
     file_count = defaultdict(int)
     file_info = defaultdict(
         lambda: {"authors": set(), "messages": [], "dates": [], "complexity": None}
     )
+    insights = []
     try:
         commit_list = Repository(
             repo_path, since=start_date, to=end_date, only_in_branch=branch
@@ -50,7 +51,7 @@ def find_top_files(
                         file_info[file_name]["dates"].append(date_str)
                     file_info[file_name]["messages"].append(commit.msg)
                     file_info[file_name]["complexity"] = (
-                        file.complexity if not pd.isna(file.complexity) else "NA"
+                        file.complexity if not pd.isna(file.complexity) else -1
                     )
                     file_count[file_name] += 1
 
@@ -71,7 +72,51 @@ def find_top_files(
             data.append(file_dict)
 
         file_info_df = pd.DataFrame(data)
-        return file_info_df
+        insights = get_insights(file_info_df, start_date, end_date)
+        return file_info_df, insights
 
     except Exception as error:
         raise error
+
+
+def get_insights(
+    file_info_df: pd.DataFrame,
+    start_date: str,
+    end_date: str
+):
+    """
+    Extract and return inferences from the top touched files data
+
+    Args:
+        files_info_df : DataFrame containing top touched files data
+        start_date : Start date for log data analysis
+        end_date : End date for log data analysis
+
+    Returns:
+        insights: String containing the inferences
+    """
+   # Find the file with the highest complexity among the top modified files
+    max_complexity_file = file_info_df.loc[file_info_df['Complexity'].idxmax()]['File']
+    max_complexity_value = file_info_df['Complexity'].max()
+    complexity_summary = f"One of the top modified files having a high complexity of {max_complexity_value} is: {max_complexity_file} "
+
+    # Find the file(s) with the maximum commits
+    max_changes_count = file_info_df['Count'].max()
+    max_changed_files = file_info_df.loc[(file_info_df['Count']==max_changes_count), 'File'].to_list()
+    max_commits_summary = f"The file(s) that had maximum commits (precisely {max_changes_count}) are: {max_changed_files}"
+
+    # Find the author(s) who made the commits to the maximum modified file(s)
+    max_commits_authors = file_info_df.loc[(file_info_df['Count']==max_changes_count), 'Authors'].to_list()
+    # Removing duplicate author names
+    names_lists = [author_names.split(', ') for author_names in max_commits_authors]
+    author_names = [name for names_list in names_lists for name in names_list]
+    max_commits_authors = list(dict.fromkeys(author_names))
+    max_commits_authors_summary = f"Author(s) who made these {max_changes_count} commits are: {max_commits_authors}"
+
+    # Framing inferences
+    start_date_str = start_date.strftime('%Y-%m-%d')
+    end_date_str = end_date.strftime('%Y-%m-%d')
+    insights = f"\nInsights for the duration {start_date_str} to {end_date_str}:\n\n" + "  -> "
+    insights = insights + complexity_summary +  "\n  -> " + max_commits_summary +  "\n  -> " + max_commits_authors_summary
+
+    return insights
