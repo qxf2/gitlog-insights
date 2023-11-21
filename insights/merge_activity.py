@@ -1,4 +1,27 @@
+"""
+This script is used to produce the following insight:
 
+Merge history of a Git repository to determine the distribution of code merges across different days of the week.
+It extracts and identifies the predominant days when code contributions occur.
+
+This info can help testing teams align their testing efforts accordingly.
+
+Usage:
+python merge_activity.py
+
+Provide the following inputs:
+Enter the start date in YYYY-MM-DD format (eg: 2022-01-01)
+Enter the end date in YYYY-MM-DD format (must be greater than start date) (eg: 2023-11-31)
+Enter the repository path: local or remote GitHub repositories
+(eg: qxf2/newsletter_automation)
+
+- The script prompts for necessary inputs and
+then fetches the merge activity report within the specified date range.
+It displays the results in the form of a simple html page.
+
+Outputs:
+The merge activity count days/month in the repository based on the PR merge activity.
+"""
 
 import os
 import sys
@@ -74,18 +97,9 @@ if __name__ == "__main__":
     end_date = end_date.strftime('%Y-%m-%d')
 
     merge_details= github_api.get_merged_pr_details(start_date,end_date)    
-    write_html_report(merge_details, "merge_report.html")
     weekly_report=fetch_report(merge_details)    
     write_html_report(weekly_report, "weekly_merge_report.html")
-    #Find the insight from the report 
-    row_max = weekly_report[weekly_report['Merges'] == weekly_report['Merges'].max()]
-
-    # Extract information from the row
-    max_month = row_max['Month'].values[0]
-    max_day_of_week = row_max['Day_of_Week'].values[0]
-    merge_count = row_max['Merges'].values[0]
-    print(f"Maximum merge happened on {max_day_of_week} in the month {max_month} : {merge_count}")
-
+    
 
 
 

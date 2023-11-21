@@ -25,4 +25,13 @@ def fetch_report(merge_activity_df):
             "Merges": count
         })
     analyzed_df = pd.DataFrame(analyzed_data)
+
+    #Find the insight from the report 
+    row_max = analyzed_df[analyzed_df['Merges'] == analyzed_df['Merges'].max()]
+
+    # Extract information from the row
+    max_month = row_max['Month'].values[0]
+    max_day_of_week = row_max['Day_of_Week'].values[0]
+    merge_count = row_max['Merges'].values[0]
+    print(f"Maximum merge happened on {max_day_of_week} in the month {max_month} : {merge_count}")
     return analyzed_df
