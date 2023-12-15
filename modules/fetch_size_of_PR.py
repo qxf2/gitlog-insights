@@ -17,18 +17,20 @@ def get_PR_details(repo_name, start_date, end_date):
         pr_details = github_api.get_pr_files_details(start_date, end_date)              
         if pr_details.empty:
             return pd.DataFrame() 
-        #print (pr_details['pr_number']) 
-        for pr_number in pr_details['pr_number']:
-            pr_detail_items = github_api.extract_files_data(pr_number)
-            print (pr_detail_items)    
-        """    
-        pr_details['files_changed'] = pr_details.groupby('pr_number')['filename'].nunique()
-        print("Number of files changed per pull request:")
-        print(pr_details.groupby('pr_number')['files_changed'].nunique())
-            
+        grouped_pr_details = pr_details.groupby('pr_number').agg({
+            'filename': 'nunique',  # Number of unique files changed
+            'changes': 'sum'        # Total number of lines changed
+        }).reset_index()          
         
-        return pr_details
-        """
+        grouped_pr_details.columns = ['pr_number', 'num_files_changed', 'total_lines_changed']
+
+        pr_sizes = pr_details.groupby('pr_number')[['additions', 'deletions']].sum().sum(axis=1)
+
+        print("Size of each pull request:")
+        print(pr_sizes)           
+        
+        return pr_sizes
+        
     except Exception as error:
         print(f"An error occurred: {error}")
         return pd.DataFrame()
