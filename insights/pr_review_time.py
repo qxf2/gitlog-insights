@@ -115,3 +115,4 @@ if __name__ == "__main__":
             average_review_time,
             html_report_path,
         )
+        print('\nDetailed log analysis can be found in pr_review_time_report.html\n')
