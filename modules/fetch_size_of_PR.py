@@ -48,14 +48,14 @@ def get_PR_insights(pr_details):
     })    
     # Framing inferences
     print(f"\nInsights for PR :")
-    print(f"\n -> The PR#{number_of_lines_changed['pr_number']} has maximum number of code lines changed: {number_of_lines_changed['total_lines_changed']} lines. This extensive change might pose challenges in review and testing.")
+    print(f"\n -> The PR#{number_of_lines_changed['pr_number']} has maximum number of code lines changed: {number_of_lines_changed['total_lines_changed']} lines. \nThis extensive change might pose challenges in review and testing.")
      
     number_of_files_changed = pr_details.loc[pr_details['num_files_changed'].idxmax()]
     files_changed_df = pd.DataFrame({
         "PR_Number": [number_of_files_changed['pr_number']],
         "Num_Files_Changed": [number_of_files_changed['num_files_changed']]
     })
-    print (f"\n -> PR with maximum file changes {number_of_files_changed['pr_number']} ==> {number_of_lines_changed['num_files_changed']}")
+    print (f"\n -> The PR#{number_of_files_changed['pr_number']} has maximum number of files changed: {number_of_files_changed['num_files_changed']} changes.\n This needs more attention towards review and testing")
     
     # Merging DataFrames
     combined_df = pd.merge(lines_changed_df, files_changed_df, on='PR_Number', how='outer')

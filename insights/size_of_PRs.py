@@ -27,7 +27,15 @@ import os
 import sys
 from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from utils import logger_util
 from modules import fetch_size_of_PR
+from helpers import github_pr_data_extractor
+
+logger_util.setup_logging()
+logger = logger_util.get_logger("userLogger")
+
+gitlog_insights_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 def get_inputs():
     """
@@ -90,10 +98,14 @@ def write_html_report(file_info_df,file_name):
 
 if __name__ == "__main__":
     start_date, end_date, repo_path = get_inputs()
-    #print (start_date)
-    #print (end_date)
-    pr_details = fetch_size_of_PR.get_PR_details(repo_path,start_date,end_date)
-    combined_df = fetch_size_of_PR.get_PR_insights(pr_details)
-    #print (pr_insights)
-    write_html_report(combined_df, "size_of_PR.html")
-    #print('\nDetailed log analysis can be found in top_touched_files_report.html\n')
+    try:
+        pr_details = fetch_size_of_PR.get_PR_details(repo_path,start_date,end_date)
+    except github_pr_data_extractor.PRDataExtractionError as error:
+        error_message = f"Error extracting PR details for repository \
+            '{repo_path}' between {start_date} and {end_date}: {error}"
+        logger.error(error_message)
+        sys.exit(1)    
+    if not pr_details.empty:
+        combined_df = fetch_size_of_PR.get_PR_insights(pr_details)        
+        write_html_report(combined_df, "size_of_PR.html")
+        print('\nDetailed log analysis can be found in size_of_PR.html\n')
