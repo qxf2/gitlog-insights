@@ -24,9 +24,18 @@ To run this script, you would need GitHub Token. For more details, please check 
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from modules import pr_review_time
 from datetime import datetime
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import logger_util
+from modules import pr_review_time
+from helpers import github_pr_data_extractor
+
+logger_util.setup_logging()
+logger = logger_util.get_logger("userLogger")
+
+gitlog_insights_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+reports_dir = os.path.join(gitlog_insights_dir, 'reports')
+html_report_path = os.path.join(reports_dir, 'pr_review_time_report.html')
 
 def get_inputs():
     """
@@ -41,7 +50,7 @@ def get_inputs():
             start_date_input = datetime.strptime(start_date_input, "%Y-%m-%d")
             break
         except ValueError:
-            print(
+            logger.error(
                 "Invalid start date format. Please enter a valid date in YYYY-MM-DD format."
             )
 
@@ -51,19 +60,19 @@ def get_inputs():
             end_date_input = datetime.strptime(end_date_input, "%Y-%m-%d")
             if end_date_input > start_date_input:
                 break
-            print("End date must be greater than start date. Please try again.")
+            logger.error("End date must be greater than start date. Please try again.")
 
         except ValueError:
-            print("Invalid date format. Please try again.")
-    
-    start_date_input=start_date_input.strftime('%Y-%m-%d')
-    end_date_input=end_date_input.strftime('%Y-%m-%d')
+            logger.error("Invalid date format. Please try again.")
+
+    start_date_input = start_date_input.strftime("%Y-%m-%d")
+    end_date_input = end_date_input.strftime("%Y-%m-%d")
     repo_name = input("Enter the repository name: ")
 
     return start_date_input, end_date_input, repo_name
 
-   
-def write_html_report(file_info_df, review_time, long_review_prs ,file_name):
+
+def write_html_report(file_info_df, review_time, file_name):
     """
     Writes the DataFrame and average review time to an HTML report file.
 
@@ -76,19 +85,35 @@ def write_html_report(file_info_df, review_time, long_review_prs ,file_name):
         None
     """
     try:
-        with open(file_name, "w", encoding='utf-8') as file:
+        with open(file_name, "w+", encoding="utf-8") as file:
             if file_info_df.empty:
                 message = "No data available between the specified dates."
                 file.write(message)
             else:
                 html = file_info_df.to_html(index=False)
                 file.write(html)
-                file.write("Average PR review time:" + str(review_time))
-    except (FileNotFoundError, PermissionError) as error:
-        print(f"An error occurred while writing the HTML report: {str(error)}")
+    except (FileNotFoundError, PermissionError) as report_error:
+        logger.error("An error occurred while writing the HTML report: %s", report_error)
+        sys.exit(1)
+
 
 if __name__ == "__main__":
-    start_date, end_date, repo_name = get_inputs()
-    review_details = pr_review_time.calculate_review_time(repo_name,start_date,end_date)
-    average_review_time,long_review_prs = pr_review_time.compute_inference(review_details)
-    write_html_report(review_details,average_review_time,long_review_prs,"pr_review_time_report.html")
+    input_start_date, input_end_date, input_repo_name = get_inputs()
+    try:
+        review_details = pr_review_time.calculate_review_time(
+            input_repo_name, input_start_date, input_end_date
+        )
+    except github_pr_data_extractor.PRDataExtractionError as error:
+        error_message = f"Error extracting review details for repository \
+            '{input_repo_name}' between {input_start_date} and {input_end_date}: {error}"
+        logger.error(error_message)
+        sys.exit(1)
+    if not review_details.empty:
+        average_review_time = pr_review_time.compute_inference(
+            review_details
+        )
+        write_html_report(
+            review_details,
+            average_review_time,
+            html_report_path,
+        )
