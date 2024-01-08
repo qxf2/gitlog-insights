@@ -50,9 +50,7 @@ def get_inputs():
             start_date_input = datetime.strptime(start_date_input, "%Y-%m-%d")
             break
         except ValueError:
-            logger.error(
-                "Invalid start date format. Please enter a valid date in YYYY-MM-DD format."
-            )
+            print("Invalid start date format. Please enter a valid date in YYYY-MM-DD format.")
 
     while True:
         try:
@@ -60,10 +58,10 @@ def get_inputs():
             end_date_input = datetime.strptime(end_date_input, "%Y-%m-%d")
             if end_date_input > start_date_input:
                 break
-            logger.error("End date must be greater than start date. Please try again.")
+            print("End date must be greater than start date. Please try again.")
 
         except ValueError:
-            logger.error("Invalid date format. Please try again.")
+            print("Invalid date format. Please try again.")
 
     start_date_input = start_date_input.strftime("%Y-%m-%d")
     end_date_input = end_date_input.strftime("%Y-%m-%d")
