@@ -25,11 +25,16 @@ The top files in the repository based on the number of modifications.
 
 import os
 import sys
+import re
 from datetime import datetime
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import logger_util
 from modules import fetch_most_modified_files
 
+logger_util.setup_logging()
+logger = logger_util.get_logger("userLogger")
+
+github_url_regex = r"https://github\.com/[\w-]+/[\w-]+\.git"
 
 def get_inputs():
     """
@@ -61,7 +66,15 @@ def get_inputs():
         except ValueError:
             print("Invalid date format. Please try again.")
 
-    repo_path_input = input("Enter the repository path: ")
+    while True:
+        try:
+            repo_path_input = input("Enter the repository path (in the format https://github.com/<repo_name>.git): ")
+            if re.match(github_url_regex, repo_path_input):
+                break
+            else:
+                raise ValueError
+        except ValueError:
+            print("Invalid repository path. Please enter a valid GitHub URL")
 
     branch_input = input("Enter the branch name (default: main): ") or "main"
 
