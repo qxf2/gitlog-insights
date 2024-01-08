@@ -3,11 +3,21 @@ This script fetches the most modified files in a GitHub repository based on
 start_date, end_date, repo, branch, file_type
 
 """
+import sys
+import os
 from typing import Optional
 import heapq
 from collections import defaultdict
 import pandas as pd
 from pydriller import Repository
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import logger_util
+
+logger = logger_util.get_logger("root")
+
+
+class PyDrillerError(Exception):
+    "To catch exceptions raised when accessing PyDriller methods"
 
 def find_top_files(
     repo_path: str,
@@ -36,11 +46,11 @@ def find_top_files(
         lambda: {"authors": set(), "messages": [], "dates": [], "complexity": None}
     )
     insights = []
-    try:
-        commit_list = Repository(
-            repo_path, since=start_date, to=end_date, only_in_branch=branch
-        ).traverse_commits()
+    commit_list = Repository(
+        repo_path, since=start_date, to=end_date, only_in_branch=branch
+    ).traverse_commits()
 
+    try:
         for commit in commit_list:
             for file in commit.modified_files:
                 file_name = file.filename
@@ -54,29 +64,29 @@ def find_top_files(
                         file.complexity if not pd.isna(file.complexity) else -1
                     )
                     file_count[file_name] += 1
+    except KeyError as key_error:
+        logger.exception(f"KeyError occurred while extracting data : {key_error}")
+        raise PyDrillerError(f"An error occurred while extracting data. KeyError: {key_error}")
 
-        pd.set_option("display.max_column", None)
+    pd.set_option("display.max_column", None)
 
-        top_files = heapq.nlargest(num_files, file_count.items(), key=lambda x: x[1])
-        data = []
+    top_files = heapq.nlargest(num_files, file_count.items(), key=lambda x: x[1])
+    data = []
 
-        for file, count in top_files:
-            file_dict = {
-                "File": file,
-                "Count": count,
-                "Complexity": file_info[file]["complexity"],
-                "Authors": ", ".join(file_info[file]["authors"]),
-                "Last Commit Message": file_info[file]["messages"][-1],
-                "Last Commit Date": file_info[file]["dates"][-1],
-            }
-            data.append(file_dict)
+    for file, count in top_files:
+        file_dict = {
+            "File": file,
+            "Count": count,
+            "Complexity": file_info[file]["complexity"],
+            "Authors": ", ".join(file_info[file]["authors"]),
+            "Last Commit Message": file_info[file]["messages"][-1],
+            "Last Commit Date": file_info[file]["dates"][-1],
+        }
+        data.append(file_dict)
 
-        file_info_df = pd.DataFrame(data)
-        insights = get_insights(file_info_df, start_date, end_date)
-        return file_info_df, insights
-
-    except Exception as error:
-        raise error
+    file_info_df = pd.DataFrame(data)
+    insights = get_insights(file_info_df, start_date, end_date)
+    return file_info_df, insights
 
 
 def get_insights(

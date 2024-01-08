@@ -5,6 +5,7 @@ The class takes a repository name as an argument and initializes an instance wit
 
 import os
 import logging
+from requests.exceptions import HTTPError
 
 logging.basicConfig(filename='error.log', level=logging.ERROR)
 
@@ -45,5 +46,5 @@ class GitHubDataExtractor:
         """
         if response.status_code == 200:
             return True
-        raise Exception(f"Error: {response.status_code}")
+        raise HTTPError(f"Error: {response.status_code}")
         
