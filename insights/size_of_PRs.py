@@ -64,9 +64,9 @@ def get_inputs():
     return start_date_input, end_date_input, repo_name
 
 
-def write_html_report(file_info_df, file_name):
+def write_html_report(file_info_df,file_name):
     """
-    Writes a DataFrame to an HTML report file.
+    Writes the DataFrame to HTML report file.
 
     Args:
         df (DataFrame): The DataFrame containing the data to be written to the HTML report.
@@ -76,22 +76,24 @@ def write_html_report(file_info_df, file_name):
         None
     """
     try:
-        with open(file_name, "w", encoding="utf-8") as file:
+        with open(file_name, "w", encoding='utf-8') as file:
             if file_info_df.empty:
                 message = "No data available between the specified dates."
                 file.write(message)
             else:
                 html = file_info_df.to_html(index=False)
-                file.write(html)
+                file.write(html)          
+                file.write("The best practice is to have 200-400 LOC per PR. This extensive change might pose challenges in review and testing")      
     except (FileNotFoundError, PermissionError) as error:
         print(f"An error occurred while writing the HTML report: {str(error)}")
 
 
 if __name__ == "__main__":
     start_date, end_date, repo_path = get_inputs()
-    print (start_date)
-    print (end_date)
+    #print (start_date)
+    #print (end_date)
     pr_details = fetch_size_of_PR.get_PR_details(repo_path,start_date,end_date)
-    #print (pr_details)
-    #write_html_report(top_files_df, "top_touched_files_report.html")
+    combined_df = fetch_size_of_PR.get_PR_insights(pr_details)
+    #print (pr_insights)
+    write_html_report(combined_df, "size_of_PR.html")
     #print('\nDetailed log analysis can be found in top_touched_files_report.html\n')
