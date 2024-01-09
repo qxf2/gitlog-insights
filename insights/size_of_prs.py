@@ -105,5 +105,5 @@ if __name__ == "__main__":
         sys.exit(1)
     if not pr_details.empty:
         combined_df = fetch_size_of_pr.get_pr_insights(pr_details)
-        write_html_report(combined_df, "size_of_PR.html")
-        print('\nDetailed log analysis can be found in size_of_PR.html\n')
+        write_html_report(combined_df, "insights_for_size_of_pr.html")
+        print('\nDetailed log analysis can be found in insights_for_size_of_pr.html\n')
