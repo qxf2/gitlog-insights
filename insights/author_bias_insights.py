@@ -88,7 +88,6 @@ def calculate_author_bias(info_df):
     mean_entropy = info_df["Entropy"].mean()
     high_bias_df = info_df[info_df["Entropy"] < mean_entropy]
 
-    # Sort the data by Entropy and Modifications, in ascending and descending order respectively
     sorted_high_bias_df = high_bias_df.sort_values(
         by=["Entropy", "Modifications"], ascending=[True, False]
     ).head(5)
@@ -111,7 +110,6 @@ def write_html_report(file_info_df, file_name):
                 message = "No data available between the specified dates."
                 file.write(message)
             else:
-                # file_info_df['Author Bias'] = file_info_df['Major'].apply(calculate_author_bias)
                 html = file_info_df.to_html(index=False)
                 file.write(html)
     except (FileNotFoundError, PermissionError) as report_error:
@@ -126,13 +124,13 @@ if __name__ == "__main__":
         contributors_data = fetch_author_count.get_contributors_info(
             repo_path, start_date, end_date
         )
+        report_data = contributors_data.copy()
     except fetch_author_count.FetchDataError as error:
         error_message = f"Error extracting review details for repository \
             '{repo_path}' between {start_date} and {end_date}: {error}"
         logger.error(error_message)
         sys.exit(1)
 
-    # checking contributors data
     if contributors_data.size == 0:
         print("No commits has been done during this time range")
     else:
@@ -140,12 +138,13 @@ if __name__ == "__main__":
         num_rows = len(high_bias_data.index)
         if num_rows == 0:
             print("No files have high Author Bias in this repository.")
-        elif num_rows < 5:
+        elif num_rows < 2:
             print("Not enough data is available to list the files with high Author Bias.")
         else:
-            print("Files with High Author Bias:", high_bias_data)
             file_list = high_bias_data["File Name"].tolist()
-            print("Files with High Author Bias during the time period:", file_list)
+            print("\n Files with High Author Bias during the time period:\n")
+            for each_file in file_list:
+                print(" -> " + each_file)
 
-        write_html_report(contributors_data, html_report_path)
-        print("\nDetailed log analysis can be found in report_author_bias.html\n")
+        write_html_report(report_data, html_report_path)
+        print("\nDetailed report can be found in report_author_bias.html (in reports folder)\n")

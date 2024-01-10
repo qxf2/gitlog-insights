@@ -56,7 +56,7 @@ def get_contributors_info(repo_path, start_date, end_date):
             contributors_dict[file] = {
                 'File Name': file,
                 'Authors': ', '.join(authors),
-                'Major': len(authors),
+                'No of Authors': len(authors),
                 'Modifications' : modifications
             }
         contributors_df = pd.DataFrame.from_dict(contributors_dict, orient='index')
