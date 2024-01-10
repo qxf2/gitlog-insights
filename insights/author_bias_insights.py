@@ -1,7 +1,6 @@
 """
 This script is used to produce the following insight:
-Find the all modified files in a GitHub repository within the specified time period along with author details.
-This info can help testing teams align their testing efforts accordingly.
+Find the files that have high Author Bias during the time period
 
 Usage:
 python author_bias_insights.py
@@ -17,14 +16,24 @@ the specified date range along with the author names, major(number of authors) a
 It displays the results in the form of a simple html page.
 
 Outputs:
-Provides all modified files from the repository within the specified time period along with author bias details.
+Provides list of files from the repository within the specified 
+that have high Author Bias.
 """
 
 import os
 import sys
-from datetime import datetime
+import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from modules import fetch_author_count
+from utils import logger_util
+
+logger_util.setup_logging()
+logger = logger_util.get_logger("userLogger")
+
+gitlog_insights_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+reports_dir = os.path.join(gitlog_insights_dir, "reports")
+html_report_path = os.path.join(reports_dir, "report_author_bias.html")
+
 
 def get_inputs():
     """
@@ -49,25 +58,42 @@ def get_inputs():
         except ValueError:
             print("Invalid date format. Please try again.")
 
-    repo_path_input = input("Enter the repository path (For example: https://github.com/qxf2/qxf2-page-object-model.git ): ")
+    repo_path_input = input(
+        "Enter the repository path (For example: "
+        "https://github.com/qxf2/qxf2-page-object-model.git ):"
+    )
 
     return start_date_input, end_date_input, repo_path_input
 
 
-def calculate_author_bias(major):
+def calculate_author_bias(info_df):
     """
-    Calculates the author bias level based on the "Major"(Number of author's) value.
+    Calculate the author bias for a given DataFrame.
+
     Args:
-        major (int): The value of the "Major" column.
+        df (DataFrame): The DataFrame containing the author information, 
+        including the number of modifications made by each author.
+
     Returns:
-        str: Author bias level (Low, Moderate, High).
+        DataFrame: The DataFrame containing the top 5 authors with the highest bias, 
+        sorted by entropy and number of modifications.
+
     """
-    if major <= 2:
-        return "High"
-    elif major <= 4:
-        return "Moderate"
-    else:
-        return "Low"
+    info_df["Proportion"] = info_df["Modifications"] / info_df["Modifications"].sum()
+
+    # Add a small positive value to avoid zero values in Proportion
+    info_df["Proportion"] = info_df["Proportion"] + 0.0001
+    info_df["Entropy"] = -info_df["Proportion"] * np.log2(info_df["Proportion"])
+
+    mean_entropy = info_df["Entropy"].mean()
+    high_bias_df = info_df[info_df["Entropy"] < mean_entropy]
+
+    # Sort the data by Entropy and Modifications, in ascending and descending order respectively
+    sorted_high_bias_df = high_bias_df.sort_values(
+        by=["Entropy", "Modifications"], ascending=[True, False]
+    ).head(5)
+
+    return sorted_high_bias_df
 
 
 def write_html_report(file_info_df, file_name):
@@ -80,35 +106,46 @@ def write_html_report(file_info_df, file_name):
         None
     """
     try:
-        with open(file_name, "w", encoding='utf-8') as file:
+        with open(file_name, "w", encoding="utf-8") as file:
             if file_info_df.empty:
                 message = "No data available between the specified dates."
                 file.write(message)
             else:
-                file_info_df['Author Bias'] = file_info_df['Major'].apply(calculate_author_bias)
+                # file_info_df['Author Bias'] = file_info_df['Major'].apply(calculate_author_bias)
                 html = file_info_df.to_html(index=False)
                 file.write(html)
-    except (FileNotFoundError, PermissionError) as error:
-        print(f"An error occurred while writing the HTML report: {str(error)}")
+    except (FileNotFoundError, PermissionError) as report_error:
+        logger.error(
+            "An error occurred while writing the HTML report: %s", report_error)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
     start_date, end_date, repo_path = get_inputs()
-    contributors_data = fetch_author_count.get_contributors_info(
-        repo_path, start_date, end_date
-    )
+    try:
+        contributors_data = fetch_author_count.get_contributors_info(
+            repo_path, start_date, end_date
+        )
+    except fetch_author_count.FetchDataError as error:
+        error_message = f"Error extracting review details for repository \
+            '{repo_path}' between {start_date} and {end_date}: {error}"
+        logger.error(error_message)
+        sys.exit(1)
 
     # checking contributors data
     if contributors_data.size == 0:
-        print("No commits has been done during this time range")    
+        print("No commits has been done during this time range")
     else:
-        high_author_bias_rows = contributors_data[contributors_data['Major'] <= 2]
+        high_bias_data = calculate_author_bias(contributors_data)
+        num_rows = len(high_bias_data.index)
+        if num_rows == 0:
+            print("No files have high Author Bias in this repository.")
+        elif num_rows < 5:
+            print("Not enough data is available to list the files with high Author Bias.")
+        else:
+            print("Files with High Author Bias:", high_bias_data)
+            file_list = high_bias_data["File Name"].tolist()
+            print("Files with High Author Bias during the time period:", file_list)
 
-        # Collect file names in a list
-        high_author_bias_file_names = list(high_author_bias_rows['File Name'])
-    
-        # Print the list of file names
-        print("Files with High Author Bias during this time range: \n",high_author_bias_file_names)
-
-    write_html_report(contributors_data, "report_author_bias.html")
-    
+        write_html_report(contributors_data, html_report_path)
+        print("\nDetailed log analysis can be found in report_author_bias.html\n")
