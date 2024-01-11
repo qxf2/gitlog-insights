@@ -9,6 +9,7 @@ from typing import Optional
 import heapq
 from collections import defaultdict
 import pandas as pd
+from git.exc import GitCommandError, NoSuchPathError
 from pydriller import Repository
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import logger_util
@@ -16,7 +17,7 @@ from utils import logger_util
 logger = logger_util.get_logger("root")
 
 
-class PyDrillerError(Exception):
+class FetchFilesDataError(Exception):
     "To catch exceptions raised when accessing PyDriller methods"
 
 def find_top_files(
@@ -45,7 +46,6 @@ def find_top_files(
     file_info = defaultdict(
         lambda: {"authors": set(), "messages": [], "dates": [], "complexity": None}
     )
-    insights = []
     commit_list = Repository(
         repo_path, since=start_date, to=end_date, only_in_branch=branch
     ).traverse_commits()
@@ -64,29 +64,48 @@ def find_top_files(
                         file.complexity if not pd.isna(file.complexity) else -1
                     )
                     file_count[file_name] += 1
+
+        pd.set_option("display.max_column", None)
+
+        top_files = heapq.nlargest(num_files, file_count.items(), key=lambda x: x[1])
+        data = []
+
+        for file, count in top_files:
+            file_dict = {
+                "File": file,
+                "Count": count,
+                "Complexity": file_info[file]["complexity"],
+                "Authors": ", ".join(file_info[file]["authors"]),
+                "Last Commit Message": file_info[file]["messages"][-1],
+                "Last Commit Date": file_info[file]["dates"][-1],
+            }
+            data.append(file_dict)
+
+        file_info_df = pd.DataFrame(data)
+
+        return file_info_df
+
     except KeyError as key_error:
-        logger.exception(f"KeyError occurred while extracting data : {key_error}")
-        raise PyDrillerError(f"An error occurred while extracting data. KeyError: {key_error}")
-
-    pd.set_option("display.max_column", None)
-
-    top_files = heapq.nlargest(num_files, file_count.items(), key=lambda x: x[1])
-    data = []
-
-    for file, count in top_files:
-        file_dict = {
-            "File": file,
-            "Count": count,
-            "Complexity": file_info[file]["complexity"],
-            "Authors": ", ".join(file_info[file]["authors"]),
-            "Last Commit Message": file_info[file]["messages"][-1],
-            "Last Commit Date": file_info[file]["dates"][-1],
-        }
-        data.append(file_dict)
-
-    file_info_df = pd.DataFrame(data)
-    insights = get_insights(file_info_df, start_date, end_date)
-    return file_info_df, insights
+        logger.exception("KeyError occurred while extracting data : %s", {key_error})
+        raise FetchFilesDataError(
+            f"Error occurred while extracting data. KeyError: {key_error}"
+        ) from key_error
+    except NoSuchPathError as path_error:
+        logger.exception("Error occured : %s", path_error)
+        raise FetchFilesDataError(
+            f"Error occurred while extracting data. {path_error}"
+        ) from path_error
+    except GitCommandError as branch_error:
+        if branch_error.status == 128:
+            print("\nError : Incorrect branch name\n")
+            logger.exception("Error message: %s", branch_error)
+            raise FetchFilesDataError(
+                f"Error occurred while extracting data. {branch_error}"
+            ) from branch_error
+        logger.exception("\nCaught a different GitCommandError: %s", {branch_error})
+        raise FetchFilesDataError(
+            f"Error occurred while extracting data. {branch_error}"
+        ) from branch_error
 
 
 def get_insights(
@@ -108,25 +127,45 @@ def get_insights(
    # Find the file with the highest complexity among the top modified files
     max_complexity_file = file_info_df.loc[file_info_df['Complexity'].idxmax()]['File']
     max_complexity_value = file_info_df['Complexity'].max()
-    complexity_summary = f"One of the top modified files having a high complexity of {max_complexity_value} is: {max_complexity_file} "
+    complexity_summary = (
+        f"One of the top modified files having a high complexity of "
+        f"{max_complexity_value} is: {max_complexity_file} "
+    )
 
     # Find the file(s) with the maximum commits
     max_changes_count = file_info_df['Count'].max()
-    max_changed_files = file_info_df.loc[(file_info_df['Count']==max_changes_count), 'File'].to_list()
-    max_commits_summary = f"The file(s) that had maximum commits (precisely {max_changes_count}) are: {max_changed_files}"
+    max_changed_files = (
+        file_info_df.loc[file_info_df['Count'] == max_changes_count, 'File']
+        .to_list()
+    )
+
+    max_commits_summary = (
+        f"The file(s) that had maximum commits (precisely {max_changes_count}) "
+        f"are: {max_changed_files}"
+    )
 
     # Find the author(s) who made the commits to the maximum modified file(s)
-    max_commits_authors = file_info_df.loc[(file_info_df['Count']==max_changes_count), 'Authors'].to_list()
+    max_commits_authors = (
+        file_info_df.loc[file_info_df['Count'] == max_changes_count, 'Authors']
+        .to_list()
+    )
+
     # Removing duplicate author names
     names_lists = [author_names.split(', ') for author_names in max_commits_authors]
     author_names = [name for names_list in names_lists for name in names_list]
     max_commits_authors = list(dict.fromkeys(author_names))
-    max_commits_authors_summary = f"Author(s) who made these {max_changes_count} commits are: {max_commits_authors}"
+    max_commits_authors_summary = (
+        f"Author(s) who made these {max_changes_count} commits are: "
+        f"{max_commits_authors}"
+    )
 
     # Framing inferences
     start_date_str = start_date.strftime('%Y-%m-%d')
     end_date_str = end_date.strftime('%Y-%m-%d')
-    insights = f"\nInsights for the duration {start_date_str} to {end_date_str}:\n\n" + "  -> "
-    insights = insights + complexity_summary +  "\n  -> " + max_commits_summary +  "\n  -> " + max_commits_authors_summary
+    insights = f"\nInsights for the duration {start_date_str} to {end_date_str}:\n"
+    insights = (
+        f"{insights}\n  -> {complexity_summary}"
+        f"\n  -> {max_commits_summary}\n  -> {max_commits_authors_summary}"
+    )
 
     return insights

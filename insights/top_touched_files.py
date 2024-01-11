@@ -25,7 +25,6 @@ The top files in the repository based on the number of modifications.
 
 import os
 import sys
-import re
 from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import logger_util
@@ -34,7 +33,9 @@ from modules import fetch_most_modified_files
 logger_util.setup_logging()
 logger = logger_util.get_logger("userLogger")
 
-github_url_regex = r"https://github\.com/[\w-]+/[\w-]+\.git"
+gitlog_insights_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+reports_dir = os.path.join(gitlog_insights_dir, 'reports')
+html_report_path = os.path.join(reports_dir, 'top_touched_files_report.html')
 
 def get_inputs():
     """
@@ -68,13 +69,14 @@ def get_inputs():
 
     while True:
         try:
-            repo_path_input = input("Enter the repository path (in the format https://github.com/<repo_name>.git): ")
-            if re.match(github_url_regex, repo_path_input):
+            repo_path_input = input(
+                "Enter the repository path (https://github.com/<repo_name>.git): "
+            )
+            if repo_path_input:
                 break
-            else:
-                raise ValueError
+            raise ValueError
         except ValueError:
-            print("Invalid repository path. Please enter a valid GitHub URL")
+            print("Please enter a valid GitHub URL")
 
     branch_input = input("Enter the branch name (default: main): ") or "main"
 
@@ -117,15 +119,26 @@ def write_html_report(file_info_df, file_name):
             else:
                 html = file_info_df.to_html(index=False)
                 file.write(html)
-    except (FileNotFoundError, PermissionError) as error:
-        print(f"An error occurred while writing the HTML report: {str(error)}")
+    except (FileNotFoundError, PermissionError) as report_error:
+        logger.error("An error occurred while writing the HTML report: %s", report_error)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
     start_date, end_date, repo_path, branch, file_type = get_inputs()
-    top_files_df, insights = fetch_most_modified_files.find_top_files(
-        repo_path, start_date, end_date, file_type, branch
-    )
-    print(insights)
-    write_html_report(top_files_df, "top_touched_files_report.html")
-    print('\nDetailed log analysis can be found in top_touched_files_report.html\n')
+    try:
+        top_files_df = fetch_most_modified_files.find_top_files(
+            repo_path, start_date, end_date, file_type, branch
+        )
+    except fetch_most_modified_files.FetchFilesDataError as error:
+        error_message = f"Error extracting review details for repository: {error}"
+        logger.error(error_message)
+        sys.exit(1)
+
+    if top_files_df.empty:
+        print(f"\n No data found betweent the specified dates : {start_date} and {end_date}")
+    else:
+        insights = fetch_most_modified_files.get_insights(top_files_df, start_date, end_date)
+        print(insights)
+    write_html_report(top_files_df, html_report_path)
+    print('\nDetailed report can be found in top_touched_files_report.html\n')
