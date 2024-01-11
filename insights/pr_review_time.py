@@ -27,7 +27,7 @@ import os
 from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import logger_util
-from modules import pr_review_time
+from modules import fetch_pr_review_time
 from helpers import github_pr_data_extractor
 
 logger_util.setup_logging()
@@ -98,7 +98,7 @@ def write_html_report(file_info_df, review_time, file_name):
 if __name__ == "__main__":
     input_start_date, input_end_date, input_repo_name = get_inputs()
     try:
-        review_details = pr_review_time.calculate_review_time(
+        review_details = fetch_pr_review_time.calculate_review_time(
             input_repo_name, input_start_date, input_end_date
         )
     except github_pr_data_extractor.PRDataExtractionError as error:
@@ -107,7 +107,7 @@ if __name__ == "__main__":
         logger.error(error_message)
         sys.exit(1)
     if not review_details.empty:
-        average_review_time = pr_review_time.compute_inference(
+        average_review_time = fetch_pr_review_time.compute_inference(
             review_details
         )
         write_html_report(
@@ -115,4 +115,4 @@ if __name__ == "__main__":
             average_review_time,
             html_report_path,
         )
-        print('\nDetailed log analysis can be found in pr_review_time_report.html\n')
+        print('\nDetailed report can be found in pr_review_time_report.html\n')
