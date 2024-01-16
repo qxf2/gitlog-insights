@@ -84,7 +84,6 @@ class PRDataExtractor(GitHubDataExtractor):
             logger.exception("An error occurred: %s", error)
             raise PRDataExtractionError("Error occurred") from error
 
-
         try:
             pr_data = response.json().get("items", [])
 
@@ -103,13 +102,38 @@ class PRDataExtractor(GitHubDataExtractor):
                     ),
                 }
                 pr_list.append(pr_dict)
+
+            # Check the link header for the next page URL
+            next_page = response.links.get("next", {}).get("url")
+
+            # Loop until there is no more next page
+            while next_page:
+                response = requests.get(next_page, headers=self.header, timeout=10)
+                pr_data = response.json().get("items", [])
+                for pull_request in pr_data:
+                    pr_dict = {
+                        "pr_number": pull_request["number"],
+                        "pr_title": pull_request["title"],
+                        "created_at": pull_request["created_at"],
+                        "author": pull_request["user"]["login"],
+                        "status": pull_request["state"],
+                        "closed_at": (
+                            pull_request["closed_at"]
+                            if pull_request["state"] == "closed"
+                            else "N/A"
+                        ),
+                    }
+                    pr_list.append(pr_dict)
+                # Update the next page URL
+                next_page = response.links.get("next", {}).get("url")
+
         except KeyError as key_error:
             logger.exception("KeyError occurred while extracting PR data: %s", key_error)
             raise PRDataExtractionError("Error extracting PR data. KeyError:") from key_error
 
         pr_df = pd.DataFrame(pr_list)
         return pr_df
-
+    
     def get_pr_files_details(self, start_date, end_date):
         """
         Retrieves details of the files associated with pull requests from GitHub

@@ -86,8 +86,6 @@ def write_html_report(file_info_df,file_name):
             else:
                 html = file_info_df.to_html(index=False)
                 file.write(html)
-                text = "\nThe best practice is to have 200-400 LOC per PR."
-                file.write(text)
     except (FileNotFoundError, PermissionError) as report_error:
         logger.error("An error occurred while writing the HTML report: %s", report_error)
         sys.exit(1)
