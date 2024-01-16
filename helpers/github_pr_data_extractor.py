@@ -3,14 +3,17 @@ This script helps in extracting pull request data from GitHub.
 """
 
 import os
-import logging
 import sys
 import pandas as pd
 import requests
 from .github_data_extractor import GitHubDataExtractor
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import logger_util
 
+logger = logger_util.get_logger('root')
 
+class PRDataExtractionError(Exception):
+    "To raise exceptions generated while trying to fetch PR Data"
 
 class PRDataExtractor(GitHubDataExtractor):
     """
@@ -73,14 +76,17 @@ class PRDataExtractor(GitHubDataExtractor):
         """
         try:
             params = {"q": query}
-            response = requests.get(self.endpoint, headers=self.header, params=params)
-            self.validate_response(response)
+            response = requests.get(self.endpoint, headers=self.header, params=params, timeout=10)
+        except requests.exceptions.HTTPError as http_error:
+            logger.exception("An error occurred while fetching response: %s", http_error)
+            raise PRDataExtractionError("Error while fetching response") from http_error
+        except requests.exceptions.RequestException as error:
+            logger.exception("An error occurred: %s", error)
+            raise PRDataExtractionError("Error occurred") from error
 
+
+        try:
             pr_data = response.json().get("items", [])
-
-            if not pr_data:
-                print("No data found within the specified date range.")
-                return pd.DataFrame()
 
             pr_list = []
             for pull_request in pr_data:
@@ -97,12 +103,12 @@ class PRDataExtractor(GitHubDataExtractor):
                     ),
                 }
                 pr_list.append(pr_dict)
+        except KeyError as key_error:
+            logger.exception("KeyError occurred while extracting PR data: %s", key_error)
+            raise PRDataExtractionError("Error extracting PR data. KeyError:") from key_error
 
-            pr_df = pd.DataFrame(pr_list)
-            return pr_df
-        except requests.exceptions.RequestException as error:
-            logging.error("An error occurred: %s", error)
-            raise error
+        pr_df = pd.DataFrame(pr_list)
+        return pr_df
 
     def get_pr_files_details(self, start_date, end_date):
         """
@@ -116,9 +122,15 @@ class PRDataExtractor(GitHubDataExtractor):
         """
         try:
             params = {"q": self.create_query(start_date, end_date)}
-            response = requests.get(self.endpoint, headers=self.header, params=params)
-            self.validate_response(response)
+            response = requests.get(self.endpoint, headers=self.header, params=params, timeout=10)
+        except requests.exceptions.HTTPError as http_error:
+            logger.exception("An error occurred while fetching response: %s", http_error)
+            raise PRDataExtractionError("Error occurred while fetching response") from http_error
+        except requests.exceptions.RequestException as error:
+            logger.exception("An error occurred: %s", error)
+            raise PRDataExtractionError("An error occurred") from error
 
+        try:
             pr_data = response.json().get("items", [])
 
             pr_files_list = []
@@ -130,12 +142,13 @@ class PRDataExtractor(GitHubDataExtractor):
                 for file_dict in files_details:
                     file_dict["pr_number"] = pr_number
                     pr_files_list.append(file_dict)
+        except KeyError as key_error:
+            logger.exception("KeyError occurred while extracting PR data: %s", key_error)
+            raise PRDataExtractionError("Error occurred extracting PR data") from key_error
 
-            pr_files_df = pd.DataFrame(pr_files_list)
-            return pr_files_df
-        except requests.exceptions.RequestException as error:
-            logging.error("An error occurred: %s", error)
-            raise error
+
+        pr_files_df = pd.DataFrame(pr_files_list)
+        return pr_files_df
 
     def extract_files_data(self, pr_number):
         """
@@ -148,11 +161,17 @@ class PRDataExtractor(GitHubDataExtractor):
         """
         try:
             endpoint = f"{self.base_url}/repos/{self.repo_name}/pulls/{pr_number}/files"
-            response = requests.get(endpoint, headers=self.header)
-            self.validate_response(response)
+            response = requests.get(endpoint, headers=self.header, timeout=10)
+        except requests.exceptions.HTTPError as http_error:
+            logger.exception("An error occurred while fetching files data: %s", http_error)
+            raise PRDataExtractionError("Error occurred fetching files data") from http_error
+        except requests.exceptions.RequestException as error:
+            logger.exception("An error occurred: %s", error)
+            raise PRDataExtractionError("An error occurred fetching files data") from error
 
+
+        try:
             files_data = response.json()
-
             files_details = []
 
             for file in files_data:
@@ -166,7 +185,7 @@ class PRDataExtractor(GitHubDataExtractor):
 
                 files_details.append(file_dict)
 
-            return files_details
-        except requests.exceptions.RequestException as error:
-            logging.error("An error occurred: %s", error)
-            raise error
+        except KeyError as key_error:
+            logger.exception("KeyError occurred while extracting PR data: %s", key_error)
+            raise PRDataExtractionError("Error occurred extracting data:") from key_error
+        return files_details
