@@ -1,10 +1,9 @@
 """
 This script is used to produce the following insight:
 
-Merge history of a Git repository to determine the distribution of code merges across different days of the week.
-It extracts and identifies the predominant days when code contributions occur.
-
-This info can help testing teams align their testing efforts accordingly.
+Merge history of a Git repository to determine the distribution of code merges 
+across different days of the week.
+It extracts and identifies the predominant days when code contributions occured.
 
 Usage:
 python merge_activity.py
@@ -17,29 +16,31 @@ Enter the repository path: local or remote GitHub repositories
 
 - The script prompts for necessary inputs and
 then fetches the merge activity report within the specified date range.
-It displays the results in the form of a simple html page.
-
-Outputs:
-The merge activity count days/month in the repository based on the PR merge activity.
+It displays inference based on the data fetched and a simple html report.
 """
 
 import os
 import sys
 from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from helpers.github_pr_data_extractor import PRDataExtractor
-from modules.fetch_report_merge_activity import fetch_report
+from helpers.github_pr_data_extractor import PRDataExtractor, PRDataExtractionError
+from modules.fetch_report_merge_activity import get_merge_activity_details
+from utils import logger_util
+
+logger_util.setup_logging()
+logger = logger_util.get_logger("userLogger")
+
+gitlog_insights_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+reports_dir = os.path.join(gitlog_insights_dir, 'reports')
+html_report_path = os.path.join(reports_dir, 'merge_activity_report.html')
 
 def get_inputs():
     """
-    Prompts the user to enter a start date, end date, repository path,
-    branch name, and file type extension
+    Prompts the user to enter a start date, end date and repository path,
     and validates the inputs.
 
-    Returns: A tuple containing the start date, end date, repository path,
-    branch name, and file type.
+    Returns: A tuple containing the start date, end date and repository path
     """
-
     while True:
         try:
             start_date_input = input("Enter the start date (YYYY-MM-DD): ")
@@ -62,7 +63,6 @@ def get_inputs():
 
     repo_name_input = input("Enter the repository name: ")
 
-    
     return start_date_input, end_date_input, repo_name_input
 
 
@@ -85,21 +85,26 @@ def write_html_report(file_info_df, file_name):
             else:
                 html = file_info_df.to_html(index=False)
                 file.write(html)
-    except (FileNotFoundError, PermissionError) as error:
-        print(f"An error occurred while writing the HTML report: {str(error)}")
+    except (FileNotFoundError, PermissionError) as report_error:
+        logger.error("An error occurred while writing the HTML report: %s", report_error)
+        sys.exit(1)
 
 
 
 if __name__ == "__main__":
     start_date, end_date, repo_path = get_inputs()
-    github_api = PRDataExtractor(repo_path)
     start_date = start_date.strftime('%Y-%m-%d')
     end_date = end_date.strftime('%Y-%m-%d')
-
-    merge_details= github_api.get_merged_pr_details(start_date,end_date)    
-    weekly_report=fetch_report(merge_details)    
-    write_html_report(weekly_report, "weekly_merge_report.html")
-    
-
-
-
+    try:
+        github_api = PRDataExtractor(repo_path)
+        merge_details = github_api.get_merged_pr_details(start_date,end_date)
+    except PRDataExtractionError as error:
+        error_message = f"Error extracting review details for repository \
+            '{repo_path}' between {start_date} and {end_date}: {error}"
+        logger.error(error_message)
+        sys.exit(1)
+    if merge_details.empty:
+        print(f"No data found betweent the specified dates : {start_date} and {end_date}")
+    else:
+        weekly_report = get_merge_activity_details(merge_details)
+        write_html_report(weekly_report, html_report_path)
