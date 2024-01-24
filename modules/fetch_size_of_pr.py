@@ -23,7 +23,7 @@ def get_pr_details(repo_name, start_date, end_date):
             print(
                 f"No data found betweent the specified dates : {start_date} and {end_date}"
             )
-            return pd.DataFrame()
+            return pd.DataFrame([])
         grouped_pr_details = (
             pr_details.groupby("pr_number")
             .agg(
@@ -47,6 +47,9 @@ def get_pr_details(repo_name, start_date, end_date):
     except KeyError as key_error:
         logger.exception("An error occured while extracting PR data %s", key_error)
         raise PRDataExtractionError("Error while extracting PR data") from key_error
+    except PRDataExtractionError as error:
+        logger.exception("An error occured while extracting PR data %s", error)
+        raise PRDataExtractionError("Error while extracting PR data") from error
 
 def get_pr_insights(pr_details):
     "PR insights"

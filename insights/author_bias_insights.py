@@ -147,4 +147,4 @@ if __name__ == "__main__":
                 print(" -> " + each_file)
 
         write_html_report(report_data, html_report_path)
-        print("\nDetailed report can be found in report_author_bias.html (in reports folder)\n")
+        print("\nDetailed report can be found in report_author_bias.html\n")

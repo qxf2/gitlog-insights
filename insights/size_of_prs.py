@@ -96,8 +96,7 @@ if __name__ == "__main__":
         pr_details = fetch_size_of_pr.get_pr_details(repo_path,start_date,end_date)
 
     except github_pr_data_extractor.PRDataExtractionError as error:
-        error_message = f"Error extracting PR details for repository \
-            '{repo_path}' between {start_date} and {end_date}: {error}"
+        error_message = f"Error extracting PR details for repository '{repo_path}' between {start_date} and {end_date}: {error}"
         logger.error(error_message)
         sys.exit(1)
     if not pr_details.empty:

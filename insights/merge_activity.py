@@ -99,8 +99,7 @@ if __name__ == "__main__":
         github_api = PRDataExtractor(repo_path)
         merge_details = github_api.get_merged_pr_details(start_date,end_date)
     except PRDataExtractionError as error:
-        error_message = f"Error extracting review details for repository \
-            '{repo_path}' between {start_date} and {end_date}: {error}"
+        error_message = f"Error extracting review details for repository '{repo_path}' between {start_date} and {end_date}: {error}"
         logger.error(error_message)
         sys.exit(1)
     if merge_details.empty:
@@ -108,3 +107,4 @@ if __name__ == "__main__":
     else:
         weekly_report = get_merge_activity_details(merge_details)
         write_html_report(weekly_report, html_report_path)
+        

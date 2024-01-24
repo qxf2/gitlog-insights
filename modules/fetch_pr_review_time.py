@@ -4,11 +4,11 @@ This script fetches the PR review time of all closed PR's for a given time perio
 import sys
 import os
 import pandas as pd
-from helpers.github_pr_data_extractor import PRDataExtractor
+from helpers.github_pr_data_extractor import PRDataExtractor, PRDataExtractionError
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import logger_util
 
-logger = logger_util.get_logger("root")
+logger = logger_util.get_logger("userLogger")
 
 def calculate_review_time(repo_name, start_date, end_date):
     """
@@ -17,7 +17,11 @@ def calculate_review_time(repo_name, start_date, end_date):
     """
 
     github_api = PRDataExtractor(repo_name)
-    pr_details = github_api.get_merged_pr_details(start_date, end_date)
+    try:
+        pr_details = github_api.get_merged_pr_details(start_date, end_date)
+    except PRDataExtractionError as error:
+        logger.error(f"An error occurred while getting PR details: {error}")
+        raise PRDataExtractionError("Error while extracting PR data") from error
 
     if pr_details.empty:
         print(f"No data found betweent the specified dates : {start_date} and {end_date}")
