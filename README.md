@@ -144,10 +144,5 @@ Detailed report can be found in merge_activity_report.html
 
 
 
-
-## Examples
-
-
-
 ## License
 This project is licensed under the MIT License.
